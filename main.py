@@ -1,31 +1,30 @@
-from selenium import webdriver
+import random
 import time
 
-url = str('https://www.wenjuan.com/s/UZBZJvhuKX/#')
-t = int(10)
-# score_list = [20, 13, 8, 10, 3, 7, 10, 10, 4, 3]
-score_list = [5]
-# 设置提交问卷次数
-for times in range(501, 520):
-    driver = webdriver.Firefox()
-    driver.get(url)
-    # 定位所有的问卷问题
-    questions = driver.find_elements_by_css_selector('div.matrix')
-    counter = 0
-    for question in questions:
-        blank_potion = question.find_element_by_css_selector('.blank.option')
-        blank_potion.clear()
-        if counter == 0:
-            blank_potion.send_keys(times)
-        else:
-            blank_potion.send_keys(score_list[counter-1])
-        counter += 1
+from selenium import webdriver
 
-    print('{}班提交成功'.format(str(times)))
+url = 'https://www.wenjuan.com/s/UZBZJvG0Jy/'
+driver = webdriver.Firefox()
+
+max_score = [0, 20, 15, 10, 10, 5, 10, 10, 10, 5, 5]
+min_score = [0.75 * score for score in max_score]
+mu = [(max_score[i] + min_score[i]) / 2 for i in range(len(max_score))]
+sigma = [(max_score[i] - min_score[i]) / 6 for i in range(len(max_score))]
+
+for room_id in range(501, 520):
+    driver.get(url)
+    time.sleep(1)
+    inputboxes = driver.find_elements_by_css_selector('div.matrix > input.blank.option')
+    for index, inputbox in enumerate(inputboxes):
+        inputbox.clear()
+        if index == 0:
+            inputbox.send_keys(room_id)
+        else:
+            random_score = round(random.gauss(mu[index], sigma[index]))
+            inputbox.send_keys(max(random_score, max_score[index]))
     subumit_button = driver.find_element_by_css_selector('#next_button')
     subumit_button.click()
+    print('宿舍 {} 提交成功'.format(room_id))
 
-    # 延迟问卷结果提交时间，以免间隔时间太短而无法提交
-    time.sleep(1)
-    driver.quit()
-print('501-519班全部提交成功')
+driver.quit()
+print('501-519宿舍全部提交成功')
